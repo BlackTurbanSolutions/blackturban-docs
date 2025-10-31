@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>BT Docs</title>
+  </head>
+
+  <body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+    <!-- Top Navigation Bar -->
+    <header
+      class="bg-white shadow-md fixed top-0 left-0 right-0 z-40 border-b border-gray-200"
+    >
+      <div class="flex justify-between items-center px-5 py-3">
+        <!-- Logo -->
+        <div class="flex items-center gap-2">
+          <img src="logo.png" alt="Logo" class="w-8 h-8 rounded" />
+          <h1 class="text-xl font-bold text-gray-600">Docs Menu</h1>
+        </div>
+
+        <!-- Toggle Button -->
+        <button
+          id="menu-toggle"
+          class="bg-gray-100 hover:bg-gray-200 p-2 rounded-md transition"
+        >
+          <svg
+            id="menu-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6 text-gray-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Collapsible Menu -->
+      <nav
+        id="menu"
+        class="hidden flex-col bg-white border-t border-gray-100 shadow-inner transition-all duration-300 ease-in-out"
+      >
+        <a
+          href="index.html"
+          class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-gray-500 flex-shrink-0"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              d="M10 20a8 8 0 100-16 8 8 0 000 16zm1-11V5a1 1 0 10-2 0v4H5a1 1 0 100 2h4v4a1 1 0 102 0v-4h4a1 1 0 100-2h-4z"
+            />
+          </svg>
+          <span>Home</span>
+        </a>
+
+        <a
+          href="./useraudit/useraudit.html"
+          class="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-gray-500 flex-shrink-0"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M9 2a1 1 0 00-1 1v1H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-3V3a1 1 0 00-1-1H9zm0 4V4h6v2h3v2H6V6h3zm-2 4h10v2H7v-2zm0 4h10v2H7v-2z"
+            />
+          </svg>
+          <span>User Audit</span>
+        </a>
+
+        <div
+          class="text-center text-gray-400 text-sm py-3 border-t border-gray-100"
+        >
+          © 2025 Black Turban Docs
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main
+      class="flex-1 flex flex-col justify-center items-center text-center p-10 mt-20"
+    >
+      <img
+        src="logo.png"
+        alt="Black Turban Logo"
+        class="w-40 h-40 mb-6 rounded-lg shadow-lg border border-gray-200 object-contain"
+      />
+      <h1 class="text-4xl font-bold text-gray-600 mb-2">
+        Black Turban Documentation
+      </h1>
+      <p class="text-gray-600 max-w-lg mb-8">
+        Welcome to the official documentation hub.<br />
+        Explore guides and explanations for your systems.
+      </p>
+    </main>
+
+    <script>
+      const menuToggle = document.getElementById("menu-toggle");
+      const menu = document.getElementById("menu");
+      const menuIcon = document.getElementById("menu-icon");
+
+      menuToggle.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
+
+        // Animate menu icon (hamburger <-> close)
+        if (!menu.classList.contains("hidden")) {
+          menuIcon.innerHTML =
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+        } else {
+          menuIcon.innerHTML =
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+        }
+      });
+    </script>
+  </body>
+</html>

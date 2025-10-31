@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>User Audit</title>
+  </head>
+
+  <body
+    class="bg-gray-50 text-gray-800 min-h-screen flex justify-center items-start py-12"
+  >
+    <div
+      class="max-w-3xl w-full bg-white rounded-xl shadow-sm p-10 mx-4 leading-relaxed"
+    >
+      <h1 class="text-3xl font-bold mb-6 text-gray-600">
+        🧾 What Does <code>user_audit:add</code> Do?
+      </h1>
+
+      <p class="mb-4">
+        Every time a user adds or updates a member, the system quietly saves a
+        record of that action — who did it, what they did, and when they did it.
+        <br />
+        This is done using <code>user_audit:add</code>.
+      </p>
+
+      <h2 class="text-2xl font-semibold mb-3 text-gray-500">
+        💻 Frontend (React)
+      </h2>
+
+      <p class="mb-4">
+        Inside your form’s <code>handleSubmit()</code> function, this line runs
+        after a successful save:
+      </p>
+
+      <pre
+        class="bg-gray-900 text-white p-4 rounded-xl overflow-x-auto mb-6"
+      ><code>
+window.electron.invoke("user_audit:add", {
+  user_id: currentUser.user_id,
+  action_type: isEditing ? "UPDATE_MEMBER" : "ADD_MEMBER",
+  action_details: `Member ${form.full_name} (${form.membership_number}) ${
+    isEditing ? "updated" : "added"
+  }`,
+});
+    </code></pre>
+
+      <p class="mb-6 bg-yellow-100 p-4 rounded-lg border-l-4 border-yellow-500">
+        This simply tells Electron:
+        <br />
+        <strong>“Save a note that this user added or updated a member.”</strong>
+      </p>
+
+      <h2 class="text-2xl font-semibold mb-3 text-gray-500">
+        ⚙️ Backend (Electron)
+      </h2>
+
+      <p class="mb-4">
+        In the Electron main process, the following code listens for that
+        message and writes it into the <code>user_audit</code> table:
+      </p>
+
+      <pre
+        class="bg-gray-800 text-white p-4 rounded-xl overflow-x-auto mb-6"
+      ><code>
+ipcMain.handle("user_audit:add", (event, { user_id, action_type, action_details }) => {
+  try {
+    const getLocalDateTime = () => {
+      const now = new Date();
+      const offset = now.getTimezoneOffset(); // in minutes
+      const local = new Date(now.getTime() - offset * 60 * 1000);
+      return local.toISOString().slice(0, 19).replace("T", " ");
+    };
+
+    db.prepare(
+      `INSERT INTO user_audit (user_id, action_type, action_details, timestamp)
+       VALUES (?, ?, ?, ?)`
+    ).run(user_id, action_type, action_details, getLocalDateTime());
+
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to add user audit:", err);
+    return { success: false, message: "Failed to log audit." };
+  }
+});
+    </code></pre>
+
+      <p class="mb-4">
+        🧠 This means the backend receives the data, adds the current local
+        timestamp, and safely writes it into the database.
+      </p>
+
+      <h2 class="text-2xl font-semibold mb-3 text-gray-500">
+        🗂️ Database Table: <code>user_audit</code>
+      </h2>
+
+      <p class="mb-4">
+        The audit log is stored in a table called <code>user_audit</code>.
+        Here’s how it’s created:
+      </p>
+
+      <pre
+        class="bg-gray-900 text-white p-4 rounded-xl overflow-x-auto mb-6"
+      ><code>
+db.prepare(`
+CREATE TABLE IF NOT EXISTS user_audit (
+  audit_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
+  action_type TEXT NOT NULL,          -- e.g. 'LOGIN', 'ADD_MEMBER', etc.
+  action_details TEXT,                -- description or JSON data
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  ip_address TEXT,
+  device_info TEXT,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  uuid TEXT DEFAULT (lower(hex(randomblob(16)))),
+  is_deleted INTEGER DEFAULT 0
+);`).run();
+    </code></pre>
+
+      <p class="mb-6">
+        Each time an action happens, a new row is added — with the user’s ID,
+        action type, details, and timestamp.
+      </p>
+
+      <h2 class="text-2xl font-semibold mb-3 text-gray-500">
+        🚀 Step-by-Step Flow
+      </h2>
+      <ol class="list-decimal pl-6 mb-6 space-y-2">
+        <li>User adds or updates a member in the form.</li>
+        <li>
+          React sends a message to Electron using
+          <code>window.electron.invoke("user_audit:add")</code>.
+        </li>
+        <li>
+          Electron receives the data, gets the current date/time, and inserts a
+          record into the <code>user_audit</code> table.
+        </li>
+        <li>
+          The action is now permanently stored — showing who did what and when.
+        </li>
+      </ol>
+
+      <h2 class="text-2xl font-semibold mb-3 text-gray-500">✅ In Short</h2>
+      <ul class="list-disc pl-6 space-y-2">
+        <li>
+          <code>window.electron.invoke()</code> → sends message from React to
+          Electron.
+        </li>
+        <li>
+          <code>"user_audit:add"</code> → backend handler that logs the action.
+        </li>
+        <li>
+          Data is saved into <code>user_audit</code> → like a permanent activity
+          log.
+        </li>
+        <li>
+          Helps with <strong>security</strong>,
+          <strong>history tracking</strong>, and
+          <strong>accountability</strong>.
+        </li>
+      </ul>
+
+      <div
+        class="mt-10 bg-green-50 p-6 rounded-2xl border border-green-200 shadow-sm"
+      >
+        <h3 class="text-2xl font-semibold text-green-700 mb-3">
+          🗒️ Think of <code>user_audit</code> as the App’s “Black Box”
+        </h3>
+        <p class="text-gray-700 leading-relaxed mb-6">
+          Just like an airplane’s black box, your <code>user_audit</code> table
+          quietly records every important action — who did it, what they did,
+          and when.
+          <br />
+          This helps track user activity for <strong>security</strong>,
+          <strong>history</strong>, and <strong>accountability</strong>.
+        </p>
+
+        <!-- Image Section -->
+        <div
+          class="bg-white rounded-xl p-4 border border-gray-200 shadow-inner text-center"
+        >
+          <h4 class="text-lg font-semibold text-gray-600 mb-2">
+            📊 User Audit Data Flow
+          </h4>
+          <img
+            src="imageone.jpg"
+            alt="User audit data flow diagram"
+            class="mx-auto rounded-xl border border-gray-300 shadow-md hover:shadow-lg transition-all duration-300 max-w-3xl w-full"
+          />
+          <p class="text-sm text-gray-500 mt-2 italic">
+            Figure: How data moves from the frontend → Electron backend →
+            Database.
+          </p>
+        </div>
+      </div>
+
+      <footer class="mt-10 text-sm text-gray-500">
+        © 2025 – Simple Docs for <code>user_audit:add</code> by Black Turban
+      </footer>
+    </div>
+  </body>
+</html>
